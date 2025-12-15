@@ -107,13 +107,11 @@ runs:
         restore-keys: |
           ${{ runner.os }}-go-
     
-    - name: Install dependencies
-      shell: bash
-      run: go mod download
-    
     - name: Build agent
       shell: bash
-      run: go build -o github-project-agent main.go
+      run: |
+        go mod tidy
+        go build -o github-project-agent main.go
     
     - name: Run agent
       shell: bash
