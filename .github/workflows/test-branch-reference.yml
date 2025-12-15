@@ -1,0 +1,46 @@
+name: Test Action from Branch Reference
+
+# This workflow demonstrates how to test the action from a branch reference
+# Useful for testing how users will reference your action
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to test (e.g., main, develop, feature-branch)'
+        required: false
+        type: string
+        default: 'main'
+      agent:
+        description: 'Agent to test'
+        required: false
+        type: string
+        default: 'Task Validator'
+
+jobs:
+  test:
+    runs-on: self-hosted
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Test action from specific branch
+      # Replace 'your-org' with your actual organization/username
+      - name: Test Action from Branch
+        uses: your-org/github-project-agent@${{ github.event.inputs.branch }}
+        with:
+          mode: 'mcp'
+          agent: ${{ github.event.inputs.agent || 'Task Validator' }}
+          # Everything auto-detected!
+          litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}
+          llm_model: ${{ secrets.LLM_MODEL || 'gpt-4' }}
+      
+      # Alternative: Test from specific commit
+      # - uses: your-org/github-project-agent@abc123def456
+      
+      # Alternative: Test from tag (if you create tags)
+      # - uses: your-org/github-project-agent@v1.0.0-beta
+

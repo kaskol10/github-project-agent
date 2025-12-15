@@ -1,0 +1,151 @@
+name: 'GitHub Project Agent'
+description: 'Intelligent agent for managing GitHub project tasks with automated validation, monitoring, and product analysis'
+author: 'Your Name'
+
+branding:
+  icon: 'robot'
+  color: 'blue'
+
+inputs:
+  mode:
+    description: 'Agent mode: validate, monitor, roast, mcp'
+    required: true
+    default: 'validate'
+  
+  agent:
+    description: 'Agent name (for MCP mode). Examples: "Task Validator", "Progress Reporter", "Executive Summary Generator"'
+    required: false
+  
+  issue:
+    description: 'Issue number to process (optional)'
+    required: false
+  
+  github_token:
+    description: 'GitHub Personal Access Token (optional - uses secrets.GITHUB_TOKEN automatically if not provided)'
+    required: false
+  
+  github_app_id:
+    description: 'GitHub App ID (for GitHub App authentication)'
+    required: false
+  
+  github_app_installation_id:
+    description: 'GitHub App Installation ID (for GitHub App authentication)'
+    required: false
+  
+  github_app_private_key:
+    description: 'GitHub App Private Key (PEM format, for GitHub App authentication)'
+    required: false
+  
+  github_app_private_key_path:
+    description: 'Path to GitHub App Private Key file (alternative to github_app_private_key)'
+    required: false
+  
+  github_owner:
+    description: 'GitHub organization or username (optional - auto-detected from workflow context)'
+    required: false
+  
+  github_repo:
+    description: 'Repository name (optional - auto-detected from workflow context. Not needed in project mode)'
+    required: false
+  
+  github_project_id:
+    description: 'GitHub Project ID (for project mode with multiple repositories). If set, project mode is enabled'
+    required: false
+  
+  github_repos:
+    description: 'Comma-separated list of repositories for project mode (e.g., "owner/repo1,owner/repo2"). Required when using project mode'
+    required: false
+  
+  litellm_base_url:
+    description: 'LiteLLM or vLLM server base URL'
+    required: true
+    default: 'http://localhost:4000'
+  
+  llm_model:
+    description: 'LLM model name'
+    required: true
+    default: 'gpt-4'
+  
+  llm_api_key:
+    description: 'LLM API key (optional)'
+    required: false
+  
+  guidelines_path:
+    description: 'Path to task guidelines markdown file'
+    required: false
+    default: '.github/task-guidelines.md'
+  
+  prompts_path:
+    description: 'Path to prompts directory (can be comma-separated for multiple paths)'
+    required: false
+    default: 'prompts'
+  
+  plugins_path:
+    description: 'Path to plugins directory'
+    required: false
+    default: '.github/agents'
+  
+  stale_threshold_days:
+    description: 'Days before a task is considered stale'
+    required: false
+    default: '7'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        cache-dependency-path: go.sum
+    
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Install dependencies
+      shell: bash
+      run: go mod download
+    
+    - name: Build agent
+      shell: bash
+      run: go build -o github-project-agent main.go
+    
+    - name: Run agent
+      shell: bash
+      env:
+        # GitHub authentication - use GITHUB_TOKEN from secrets if not provided
+        GITHUB_TOKEN: ${{ inputs.github_token || secrets.GITHUB_TOKEN }}
+        GITHUB_APP_ID: ${{ inputs.github_app_id }}
+        GITHUB_APP_INSTALLATION_ID: ${{ inputs.github_app_installation_id }}
+        GITHUB_APP_PRIVATE_KEY: ${{ inputs.github_app_private_key }}
+        GITHUB_APP_PRIVATE_KEY_PATH: ${{ inputs.github_app_private_key_path }}
+        # Auto-detect owner/repo from GitHub Actions context if not provided
+        GITHUB_OWNER: ${{ inputs.github_owner || github.repository_owner }}
+        GITHUB_REPO: ${{ inputs.github_repo || github.event.repository.name }}
+        GITHUB_PROJECT_ID: ${{ inputs.github_project_id }}
+        GITHUB_REPOS: ${{ inputs.github_repos }}
+        LITELLM_BASE_URL: ${{ inputs.litellm_base_url }}
+        LLM_MODEL: ${{ inputs.llm_model }}
+        LLM_API_KEY: ${{ inputs.llm_api_key }}
+        GUIDELINES_PATH: ${{ inputs.guidelines_path }}
+        PROMPTS_PATH: ${{ inputs.prompts_path }}
+        PLUGINS_PATH: ${{ inputs.plugins_path }}
+        STALE_TASK_THRESHOLD_DAYS: ${{ inputs.stale_threshold_days }}
+      run: |
+        CMD="./github-project-agent -mode=${{ inputs.mode }}"
+        
+        if [ -n "${{ inputs.agent }}" ]; then
+          CMD="$CMD -agent=\"${{ inputs.agent }}\""
+        fi
+        
+        if [ -n "${{ inputs.issue }}" ]; then
+          CMD="$CMD -issue=${{ inputs.issue }}"
+        fi
+        
+        eval $CMD
+

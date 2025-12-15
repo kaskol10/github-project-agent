@@ -1,0 +1,75 @@
+name: Test GitHub Action (Local Testing)
+
+# This workflow tests the action from the same repository without publishing
+# Perfect for testing during development!
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: 'Agent name to test (e.g., "Task Validator", "Progress Reporter")'
+        required: false
+        type: string
+        default: 'Task Validator'
+      issue:
+        description: 'Issue number to test with (leave empty to test all issues)'
+        required: false
+        type: string
+      mode:
+        description: 'Mode to test'
+        required: false
+        type: choice
+        options:
+          - validate
+          - monitor
+          - roast
+          - mcp
+        default: 'mcp'
+      test_mode:
+        description: 'Test mode: same-repo, branch, or project-mode'
+        required: false
+        type: choice
+        options:
+          - same-repo
+          - project-mode
+        default: 'same-repo'
+
+jobs:
+  test-action:
+    runs-on: self-hosted
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Method 1: Test from same repository (uses: ./)
+      - name: Test Action (Same Repository)
+        if: github.event.inputs.test_mode == 'same-repo' || github.event.inputs.test_mode == ''
+        uses: ./
+        with:
+          mode: ${{ github.event.inputs.mode || 'mcp' }}
+          agent: ${{ github.event.inputs.agent || 'Task Validator' }}
+          issue: ${{ github.event.inputs.issue }}
+          # Auto-detected: github_token, github_owner, github_repo
+          litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}
+          llm_model: ${{ secrets.LLM_MODEL || 'gpt-4' }}
+          llm_api_key: ${{ secrets.LLM_API_KEY }}
+      
+      # Method 2: Test project mode
+      - name: Test Action (Project Mode)
+        if: github.event.inputs.test_mode == 'project-mode'
+        uses: ./
+        with:
+          mode: ${{ github.event.inputs.mode || 'mcp' }}
+          agent: ${{ github.event.inputs.agent || 'Task Validator' }}
+          issue: ${{ github.event.inputs.issue }}
+          github_project_id: ${{ secrets.GITHUB_PROJECT_ID }}
+          github_repos: ${{ secrets.GITHUB_REPOS }}
+          # github_repo NOT needed - auto-detected!
+          litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}
+          llm_model: ${{ secrets.LLM_MODEL || 'gpt-4' }}
+          llm_api_key: ${{ secrets.LLM_API_KEY }}
+

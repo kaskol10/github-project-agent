@@ -1,0 +1,71 @@
+name: Example - GitHub Project Agent Usage
+
+# This is an example workflow showing how to use the GitHub Project Agent
+# You can copy this workflow and customize it for your needs
+
+on:
+  # Trigger on issue events
+  issues:
+    types: [opened, edited]
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: 'Agent to run (e.g., Task Validator, Progress Reporter)'
+        required: false
+        type: string
+        default: 'Task Validator'
+      issue:
+        description: 'Issue number to process'
+        required: false
+        type: string
+  
+  # Schedule for periodic tasks
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  run-agent:
+    runs-on: self-hosted  # Requires self-hosted runner with access to LLM server
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Option 1: Use action from same repository (for testing)
+      - name: Run GitHub Project Agent
+        uses: ./
+        with:
+          mode: 'mcp'
+          agent: ${{ github.event.inputs.agent || 'Task Validator' }}
+          issue: ${{ github.event.inputs.issue || github.event.issue.number }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_owner: ${{ github.repository_owner }}
+          github_repo: ${{ github.event.repository.name }}
+          litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}
+          llm_model: ${{ secrets.LLM_MODEL || 'gpt-4' }}
+          llm_api_key: ${{ secrets.LLM_API_KEY }}
+          guidelines_path: .github/task-guidelines.md
+          prompts_path: prompts
+          plugins_path: .github/agents
+          stale_threshold_days: '7'
+      
+      # Option 2: After publishing to Marketplace, use versioned reference:
+      # - name: Run GitHub Project Agent
+      #   uses: your-org/github-project-agent@v1.0.0
+      #   with:
+      #     mode: 'mcp'
+      #     agent: ${{ github.event.inputs.agent || 'Task Validator' }}
+      #     issue: ${{ github.event.inputs.issue || github.event.issue.number }}
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     github_owner: ${{ github.repository_owner }}
+      #     github_repo: ${{ github.event.repository.name }}
+      #     litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}
+      #     llm_model: ${{ secrets.LLM_MODEL || 'gpt-4' }}
+      #     llm_api_key: ${{ secrets.LLM_API_KEY }}
+

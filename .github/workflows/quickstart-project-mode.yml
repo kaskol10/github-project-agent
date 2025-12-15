@@ -1,0 +1,32 @@
+name: Task Validator - Project Mode (Multiple Repos)
+
+# This workflow is for GitHub Projects that span multiple repositories
+# The action automatically searches across all repositories - no need to specify github_repo!
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: self-hosted  # Requires self-hosted runner with access to your LLM server
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate Tasks Across All Repos
+        uses: your-org/github-project-agent@v1.0.0  # Replace with your published action
+        with:
+          mode: 'mcp'
+          agent: 'Task Validator'
+          # Project mode configuration
+          github_project_id: ${{ secrets.GITHUB_PROJECT_ID }}  # Your GitHub Project number
+          github_repos: ${{ secrets.GITHUB_REPOS }}  # Comma-separated: "owner/repo1,owner/repo2,owner/repo3"
+          # github_repo is NOT needed - system searches across all repos automatically!
+          litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}  # Required: Your LLM server URL
+          llm_model: ${{ secrets.LLM_MODEL || 'gpt-4' }}  # Optional: defaults to 'gpt-4'
+

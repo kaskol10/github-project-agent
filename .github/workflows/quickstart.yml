@@ -1,0 +1,32 @@
+name: Task Validator - Quick Start
+
+# This is the simplest possible setup - just add your LLM server URL!
+# The action will automatically use GitHub's built-in token and detect your repository.
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: self-hosted  # Requires self-hosted runner with access to your LLM server
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate Tasks
+        uses: your-org/github-project-agent@v1.0.0  # Replace with your published action
+        with:
+          mode: 'mcp'
+          agent: 'Task Validator'
+          # GitHub token and repo are auto-detected - no need to specify!
+          # github_token: ${{ secrets.GITHUB_TOKEN }}  # Optional: auto-used if not specified
+          # github_owner: ${{ github.repository_owner }}  # Optional: auto-detected
+          # github_repo: ${{ github.event.repository.name }}  # Optional: auto-detected
+          litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}  # Required: Your LLM server URL
+          llm_model: ${{ secrets.LLM_MODEL || 'gpt-4' }}  # Optional: defaults to 'gpt-4'
+
