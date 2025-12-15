@@ -152,7 +152,9 @@ runs:
         # Verify GitHub authentication is provided
         if [ -z "$GITHUB_TOKEN" ] && [ -z "$GITHUB_APP_ID" ]; then
           echo "Error: Either GITHUB_TOKEN or GitHub App credentials must be provided"
-          echo "Please pass github_token: \${{ secrets.GITHUB_TOKEN }} in your workflow"
+          echo "Please pass github_token input in your workflow, for example:"
+          echo "  github_token: secrets.GITHUB_TOKEN"
+          echo "Or use GitHub App authentication with github_app_id, github_app_installation_id, and github_app_private_key"
           exit 1
         fi
         
