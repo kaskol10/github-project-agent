@@ -21,7 +21,7 @@ inputs:
     required: false
   
   github_token:
-    description: 'GitHub Personal Access Token. Pass ${{ secrets.GITHUB_TOKEN }} from your workflow. Required unless using GitHub App authentication.'
+    description: 'GitHub Personal Access Token. Pass github_token from your workflow. Required unless using GitHub App authentication.'
     required: false
   
   github_app_id:
