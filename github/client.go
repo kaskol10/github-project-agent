@@ -84,7 +84,13 @@ func (c *Client) ListIssues(ctx context.Context, state string) ([]*Issue, error)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list issues: %w", err)
 		}
-		allIssues = append(allIssues, issues...)
+		// Filter out pull requests - only include actual issues
+		for _, issue := range issues {
+			// If PullRequestLinks is not nil, it's a PR, not an issue
+			if issue.PullRequestLinks == nil {
+				allIssues = append(allIssues, issue)
+			}
+		}
 		if resp.NextPage == 0 {
 			break
 		}
@@ -129,6 +135,11 @@ func (c *Client) GetIssueFromRepo(ctx context.Context, owner, repo string, numbe
 	issue, _, err := c.client.Issues.Get(ctx, owner, repo, number)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get issue: %w", err)
+	}
+
+	// Filter out pull requests - only return actual issues
+	if issue.PullRequestLinks != nil {
+		return nil, fmt.Errorf("issue #%d is a pull request, not an issue", number)
 	}
 
 	labels := make([]string, len(issue.Labels))

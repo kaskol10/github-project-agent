@@ -92,6 +92,11 @@ func (pc *ProjectClient) ListProjectIssues(ctx context.Context, state string, re
 			}
 
 			for _, issue := range issues {
+				// Filter out pull requests - only include actual issues
+				// If PullRequestLinks is not nil, it's a PR, not an issue
+				if issue.PullRequestLinks != nil {
+					continue
+				}
 				labels := make([]string, len(issue.Labels))
 				for j, label := range issue.Labels {
 					labels[j] = label.GetName()
@@ -137,6 +142,11 @@ func (pc *ProjectClient) GetProjectIssue(ctx context.Context, owner, repo string
 	issue, _, err := pc.client.Issues.Get(ctx, owner, repo, number)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get issue: %w", err)
+	}
+
+	// Filter out pull requests - only return actual issues
+	if issue.PullRequestLinks != nil {
+		return nil, fmt.Errorf("issue #%d is a pull request, not an issue", number)
 	}
 
 	labels := make([]string, len(issue.Labels))
