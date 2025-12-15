@@ -149,8 +149,28 @@ runs:
         PLUGINS_PATH: ${{ inputs.plugins_path }}
         STALE_TASK_THRESHOLD_DAYS: ${{ inputs.stale_threshold_days }}
       run: |
+        # Debug: Check if token is provided (without exposing the actual token)
+        echo "Debug: Checking GitHub authentication..."
+        if [ -n "$GITHUB_TOKEN" ]; then
+          TOKEN_LEN=${#GITHUB_TOKEN}
+          echo "✓ GITHUB_TOKEN is set (length: $TOKEN_LEN characters)"
+          if [ "$TOKEN_LEN" -lt 10 ]; then
+            echo "⚠ Warning: Token seems too short, might be invalid"
+          fi
+        else
+          echo "✗ GITHUB_TOKEN is not set or is empty"
+          echo "  This means the github_token input was not provided or was empty"
+        fi
+        
+        if [ -n "$GITHUB_APP_ID" ]; then
+          echo "✓ GITHUB_APP_ID is set: $GITHUB_APP_ID"
+        else
+          echo "✗ GITHUB_APP_ID is not set"
+        fi
+        
         # Verify GitHub authentication is provided
         if [ -z "$GITHUB_TOKEN" ] && [ -z "$GITHUB_APP_ID" ]; then
+          echo ""
           echo "Error: Either GITHUB_TOKEN or GitHub App credentials must be provided"
           echo "Please pass github_token input in your workflow, for example:"
           echo "  github_token: secrets.GITHUB_TOKEN"
