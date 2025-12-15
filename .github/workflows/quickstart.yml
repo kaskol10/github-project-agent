@@ -23,8 +23,9 @@ jobs:
         with:
           mode: 'mcp'
           agent: 'Task Validator'
-          # GitHub token and repo are auto-detected - no need to specify!
-          # github_token: ${{ secrets.GITHUB_TOKEN }}  # Optional: auto-used if not specified
+          # GitHub token - pass explicitly from secrets
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Owner and repo are auto-detected from workflow context if not specified
           # github_owner: ${{ github.repository_owner }}  # Optional: auto-detected
           # github_repo: ${{ github.event.repository.name }}  # Optional: auto-detected
           litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}  # Required: Your LLM server URL

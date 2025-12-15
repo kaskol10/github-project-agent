@@ -23,6 +23,8 @@ jobs:
         with:
           mode: 'mcp'
           agent: 'Task Validator'
+          # GitHub token - pass explicitly from secrets
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # Project mode configuration
           github_project_id: ${{ secrets.GITHUB_PROJECT_ID }}  # Your GitHub Project number
           github_repos: ${{ secrets.GITHUB_REPOS }}  # Comma-separated: "owner/repo1,owner/repo2,owner/repo3"

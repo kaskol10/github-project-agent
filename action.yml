@@ -21,7 +21,7 @@ inputs:
     required: false
   
   github_token:
-    description: 'GitHub Personal Access Token (optional - uses secrets.GITHUB_TOKEN automatically if not provided)'
+    description: 'GitHub Personal Access Token. Pass ${{ secrets.GITHUB_TOKEN }} from your workflow. Required unless using GitHub App authentication.'
     required: false
   
   github_app_id:
@@ -118,8 +118,8 @@ runs:
     - name: Run agent
       shell: bash
       env:
-        # GitHub authentication - use GITHUB_TOKEN from secrets if not provided
-        GITHUB_TOKEN: ${{ inputs.github_token || secrets.GITHUB_TOKEN }}
+        # GitHub authentication - pass secrets.GITHUB_TOKEN from workflow if needed
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_APP_ID: ${{ inputs.github_app_id }}
         GITHUB_APP_INSTALLATION_ID: ${{ inputs.github_app_installation_id }}
         GITHUB_APP_PRIVATE_KEY: ${{ inputs.github_app_private_key }}
