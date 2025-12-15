@@ -89,29 +89,42 @@ inputs:
     description: 'Days before a task is considered stale'
     required: false
     default: '7'
+  
+  action_version:
+    description: 'Version/ref of the action to checkout (for building). Defaults to the version being used.'
+    required: false
+    default: 'main'
 
 runs:
   using: 'composite'
   steps:
+    - name: Checkout action repository
+      uses: actions/checkout@v4
+      with:
+        repository: kaskol10/github-project-agent
+        ref: ${{ inputs.action_version }}
+        path: action-repo
+    
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.21'
-        cache-dependency-path: go.sum
+        cache-dependency-path: action-repo/go.sum
     
     - name: Cache Go modules
       uses: actions/cache@v4
       with:
         path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('action-repo/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
     
     - name: Build agent
       shell: bash
+      working-directory: action-repo
       run: |
         go mod tidy
-        go build -o github-project-agent main.go
+        go build -o ../github-project-agent main.go
     
     - name: Run agent
       shell: bash
