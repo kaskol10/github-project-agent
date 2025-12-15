@@ -129,7 +129,8 @@ runs:
     - name: Run agent
       shell: bash
       env:
-        # GitHub authentication - pass secrets.GITHUB_TOKEN from workflow if needed
+        # GitHub authentication - must be passed as input from the calling workflow
+        # Note: In composite actions, secrets are not available directly - they must be passed as inputs
         GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_APP_ID: ${{ inputs.github_app_id }}
         GITHUB_APP_INSTALLATION_ID: ${{ inputs.github_app_installation_id }}
@@ -148,6 +149,13 @@ runs:
         PLUGINS_PATH: ${{ inputs.plugins_path }}
         STALE_TASK_THRESHOLD_DAYS: ${{ inputs.stale_threshold_days }}
       run: |
+        # Verify GitHub authentication is provided
+        if [ -z "$GITHUB_TOKEN" ] && [ -z "$GITHUB_APP_ID" ]; then
+          echo "Error: Either GITHUB_TOKEN or GitHub App credentials must be provided"
+          echo "Please pass github_token: \${{ secrets.GITHUB_TOKEN }} in your workflow"
+          exit 1
+        fi
+        
         CMD="./github-project-agent -mode=${{ inputs.mode }}"
         
         if [ -n "${{ inputs.agent }}" ]; then

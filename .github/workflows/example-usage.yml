@@ -38,13 +38,17 @@ jobs:
         uses: actions/checkout@v4
       
       # Option 1: Use action from same repository (for testing)
+      # Option 1: Use action from same repository (for testing)
       - name: Run GitHub Project Agent
         uses: ./
         with:
           mode: 'mcp'
           agent: ${{ github.event.inputs.agent || 'Task Validator' }}
           issue: ${{ github.event.inputs.issue || github.event.issue.number }}
+          # Use GitHub's automatic token (RECOMMENDED - no setup needed)
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Or use a custom token if you have one configured:
+          # github_token: ${{ secrets.TOKEN_GITHUB }}
           github_owner: ${{ github.repository_owner }}
           github_repo: ${{ github.event.repository.name }}
           litellm_base_url: ${{ secrets.LITELLM_BASE_URL }}
