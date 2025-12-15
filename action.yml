@@ -126,6 +126,29 @@ runs:
         go mod tidy
         go build -o ../github-project-agent main.go
     
+    - name: Copy default files if they don't exist
+      shell: bash
+      run: |
+        # Copy default guidelines if they don't exist in user's repo
+        if [ ! -f ".github/task-guidelines.md" ] && [ -f "action-repo/.github/task-guidelines.md" ]; then
+          mkdir -p .github
+          cp action-repo/.github/task-guidelines.md .github/task-guidelines.md
+          echo "✓ Copied default task-guidelines.md"
+        fi
+        
+        # Copy default plugins if they don't exist in user's repo
+        if [ ! -d ".github/agents" ] && [ -d "action-repo/.github/agents" ]; then
+          mkdir -p .github
+          cp -r action-repo/.github/agents .github/agents
+          echo "✓ Copied default plugins from action-repo/.github/agents"
+        fi
+        
+        # Copy default prompts if they don't exist in user's repo
+        if [ ! -d "prompts" ] && [ -d "action-repo/prompts" ]; then
+          cp -r action-repo/prompts prompts
+          echo "✓ Copied default prompts from action-repo/prompts"
+        fi
+    
     - name: Run agent
       shell: bash
       env:
